@@ -30,15 +30,12 @@ import tensorflow as tf
 import six
 
 from . import g2p_trainer_utils
-#from tensor2tensor.data_generators import text_encoder
-#from tensor2tensor.data_generators import translate
+from g2p_seq2seq.params import Params
 from tensor2tensor.data_generators import problem
 from tensor2tensor.utils import registry
 from tensor2tensor.utils import trainer_utils
 from tensor2tensor.utils import usr_dir
 from tensor2tensor.utils import decoding
-
-#EOS = text_encoder.EOS_ID
 
 from IPython.core.debugger import Tracer
 
@@ -59,10 +56,10 @@ tf.flags.DEFINE_integer("batch_size", 64,
 tf.flags.DEFINE_integer("max_epochs", 10,
                         "How many training steps to do until stop training"
                         " (0: no limit).")
-tf.flags.DEFINE_integer("eval_every_n_steps", 1000,
+tf.flags.DEFINE_integer("eval_steps", 10,
                         "Run evaluation on validation data every N steps.")
-tf.flags.DEFINE_string("master", "", "Address of TensorFlow master.")
 tf.flags.DEFINE_string("schedule", "train_and_evaluate", "Set schedule.")
+tf.flags.DEFINE_string("master", "", "Address of TensorFlow master.")
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -71,60 +68,43 @@ def main(_=[]):
   """Main function.
   """
 
-  FLAGS.hparams_set = "transformer_small"
-  FLAGS.schedule = "train_and_evaluate"
-  FLAGS.problems = "grapheme_to_phoneme_problem"
-  FLAGS.decode_hparams = "beam_size=4,alpha=0.6"
-  FLAGS.decode_to_file = "decode_output.txt"
-  problem_name = "grapheme_to_phoneme_problem"
-
   tf.logging.set_verbosity(tf.logging.INFO)
   usr_dir.import_usr_dir(os.path.dirname(os.path.abspath(__file__)))
-  problem = registry._PROBLEMS[problem_name](FLAGS.model_dir)
+  data_path = FLAGS.train if FLAGS.train else FLAGS.decode
+  params = Params(FLAGS.model_dir, data_path, flags=FLAGS)
+  problem = registry._PROBLEMS[params.problem_name](params.model_dir)
   trainer_utils.log_registry()
-  output_dir = os.path.expanduser(FLAGS.model_dir)
-  if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
+  if not os.path.exists(params.model_dir):
+    os.makedirs(params.model_dir)
 
   if FLAGS.train:
-    train_preprocess_file_path = problem.generate_data(FLAGS.train, FLAGS.model_dir, train_flag=True)
-    dev_preprocess_file_path = problem.generate_data(FLAGS.valid, FLAGS.model_dir, train_flag=False)
-    data_dir = os.path.dirname(FLAGS.train)
-    g2p_trainer_utils.run(
-      problem_name=problem_name,
-      model_dir=FLAGS.model_dir,
-      data_dir=data_dir,
-      model="transformer",
-      output_dir=output_dir,
-      train_steps=10000,
-      eval_steps=10,
-      schedule=FLAGS.schedule,
+    train_preprocess_file_path = problem.generate_data(FLAGS.train,
+      params.model_dir, train_flag=True)
+    dev_preprocess_file_path = problem.generate_data(FLAGS.valid,
+      params.model_dir, train_flag=False)
+    g2p_trainer_utils.run(params=params,
       train_preprocess_file_path=train_preprocess_file_path,
       dev_preprocess_file_path=dev_preprocess_file_path)
 
   else:
-    test_preprocess_file_path = problem.generate_data(FLAGS.decode, FLAGS.model_dir, train_flag=False)
-    data_dir = os.path.dirname(FLAGS.decode)
-    hparams = trainer_utils.create_hparams(
-      FLAGS.hparams_set, data_dir, passed_hparams=FLAGS.hparams)
-    g2p_trainer_utils.add_problem_hparams(hparams, problem_name, FLAGS.model_dir)
+    test_preprocess_file_path = problem.generate_data(FLAGS.decode,
+      params.model_dir, train_flag=False)
+    hparams = trainer_utils.create_hparams(params.hparams_set, params.data_dir)
+    g2p_trainer_utils.add_problem_hparams(hparams, params.problem_name,
+      params.model_dir)
     estimator, _ = g2p_trainer_utils.create_experiment_components(
-      problem_name=problem_name,
-      data_dir=data_dir,
-      model_name="transformer",
+      params=params,
       hparams=hparams,
-      run_config=trainer_utils.create_run_config(output_dir),
-      model_dir=FLAGS.model_dir,
+      run_config=trainer_utils.create_run_config(params.model_dir),
       dev_preprocess_file_path=test_preprocess_file_path)
 
-    decode_hp = decoding.decode_hparams(FLAGS.decode_hparams)
+    decode_hp = decoding.decode_hparams(params.decode_hparams)
     decode_hp.add_hparam("shards", 1)
-    decode_hp.add_hparam("shard_id", FLAGS.worker_id)
     if FLAGS.interactive:
       decoding.decode_interactively(estimator, decode_hp)
     elif FLAGS.decode:
       decoding.decode_from_file(estimator, FLAGS.decode, decode_hp,
-                                FLAGS.decode_to_file)
+                                FLAGS.output)
     #else:
     #  decoding.decode_from_dataset(
     #    estimator,
