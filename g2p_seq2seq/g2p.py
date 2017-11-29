@@ -54,7 +54,7 @@ class G2PModel(object):
         self.params.model_dir, data_path=train_path)
       if dev_path:
         self.train_preprocess_file_path = self.problem.generate_data(train_path,
-          self.params.model_dir, source_vocab, target_vocab)
+          source_vocab, target_vocab)
         self.dev_preprocess_file_path = self.problem.generate_data(dev_path,
           source_vocab, target_vocab)
     elif test_path:

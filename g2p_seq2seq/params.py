@@ -29,10 +29,13 @@ class Params(object):
     self.schedule = "train_and_evaluate"
     self.model_name = "transformer"
     self.problem_name = "grapheme_to_phoneme_problem"
-    self.train_steps = 10
+    self.batch_size = 1
+    self.train_steps = 2
     self.eval_steps = 1
+    self.hparams = "batch_size=1,num_hidden_layers=1,hidden_size=4,filter_size=8,num_heads=1"
     self.decode_hparams = "beam_size=4,alpha=0.6"
     if flags:
       self.batch_size = flags.batch_size
       self.eval_steps = flags.eval_steps
       self.train_steps = len(open(data_path).readlines()) * flags.max_epochs
+      self.hparams = "batch_size=" + str(self.batch_size) + ",num_hidden_layers=" + str(flags.num_layers) + ",hidden_size=" + str(flags.size) + ",filter_size=" + str(flags.filter_size) + ",num_heads=" + str(flags.num_heads)

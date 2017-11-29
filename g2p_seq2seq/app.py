@@ -46,8 +46,13 @@ tf.flags.DEFINE_string("test", "", "Test dictionary.")
 tf.flags.DEFINE_boolean("reinit", False,
                         "Set to True for training from scratch.")
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 64,
+tf.flags.DEFINE_integer("batch_size", 128,
                         "Batch size to use during training.")
+tf.flags.DEFINE_integer("num_layers", 2, "Number of hidden layers.")
+tf.flags.DEFINE_integer("size", 256,
+                        "The number of neurons in the hidden layer.")
+tf.flags.DEFINE_integer("filter_size", 1024, "The size of the filter.")
+tf.flags.DEFINE_integer("num_heads", 4, "Number of heads.")
 tf.flags.DEFINE_integer("max_epochs", 10,
                         "How many training steps to do until stop training"
                         " (0: no limit).")

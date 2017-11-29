@@ -184,7 +184,8 @@ def run(params, train_preprocess_file_path, dev_preprocess_file_path):
 
   # Create hparams and run_config
   run_config = trainer_utils.create_run_config(params.model_dir)
-  hparams = trainer_utils.create_hparams(params.hparams_set, params.data_dir)
+  hparams = trainer_utils.create_hparams(params.hparams_set, params.data_dir,
+    passed_hparams=params.hparams)
 
   if trainer_utils.is_chief():
     trainer_utils.save_metadata(params.model_dir, hparams)
