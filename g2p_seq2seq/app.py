@@ -46,10 +46,10 @@ tf.flags.DEFINE_string("test", "", "Test dictionary.")
 tf.flags.DEFINE_boolean("reinit", False,
                         "Set to True for training from scratch.")
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 128,
+tf.flags.DEFINE_integer("batch_size", 256,
                         "Batch size to use during training.")
 tf.flags.DEFINE_integer("num_layers", 2, "Number of hidden layers.")
-tf.flags.DEFINE_integer("size", 256,
+tf.flags.DEFINE_integer("size", 512,
                         "The number of neurons in the hidden layer.")
 tf.flags.DEFINE_integer("filter_size", 1024, "The size of the filter.")
 tf.flags.DEFINE_integer("num_heads", 4, "Number of heads.")
@@ -78,7 +78,8 @@ def main(_=[]):
 
   elif FLAGS.decode:
     g2p_model.prepare_data(test_path=FLAGS.decode)
-    g2p_model.decode(decode_from_file=FLAGS.decode, decode_to_file=FLAGS.output)
+    g2p_model.decode(decode_file_path=FLAGS.decode,
+      output_file_path=FLAGS.output)
 
   elif FLAGS.interactive:
     g2p_model.interactive()
