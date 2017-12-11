@@ -34,8 +34,8 @@ class Params(object):
     self.batch_size = 1
     self.train_steps = 2
     self.eval_steps = 1
-    self.hparams = """batch_size=1,num_hidden_layers=1,hidden_size=4,
-                      filter_size=8,num_heads=1"""
+    self.hparams = "batch_size=1,num_hidden_layers=1,hidden_size=4" +\
+        ",filter_size=8,num_heads=1"
     self.decode_hparams = "beam_size=4,alpha=0.6"
 
     if flags:
